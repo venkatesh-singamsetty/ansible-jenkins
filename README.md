@@ -32,7 +32,7 @@ This repository is an opinionated Ansible scaffold to manage a Jenkins controlle
 
 - Option A — Static inventory (existing hosts):
   1. Edit `ansible/inventories/dev/hosts.ini` or `ansible/inventories/prod/hosts.ini` and `ansible/inventories/group_vars/*`.
-  2. (Optional) Create vaulted secrets: `./scripts/create_vault.sh` or `ansible-vault create inventories/group_vars/vault.yml`.
+  2. (Optional) Create vaulted secrets: `./scripts/ansible/create_vault.sh` or `ansible-vault create inventories/group_vars/vault.yml`.
   3. Run controller: `ansible-playbook -i ansible/inventories/dev ansible/playbooks/controller.yml`.
   4. Run agents: `ansible-playbook -i ansible/inventories/dev ansible/playbooks/agents.yml`.
 
@@ -66,7 +66,7 @@ ansible-playbook -i terraform/aws/inventory ansible/playbooks/agents.yml --ask-v
 
 **Secrets & Vault**
 - Do NOT commit plaintext secrets. Use Ansible Vault for sensitive values (`jenkins_admin_password`, `agent_secret`).
-- Helper: `scripts/create_vault.sh` creates `inventories/group_vars/vault.yml` for you.
+- Helper: `scripts/ansible/create_vault.sh` creates `inventories/group_vars/vault.yml` for you.
 
 **CI / Linting**
 - A GitHub Actions workflow is included to run `terraform validate` and `ansible-lint` (`.github/workflows/ci.yml`).
@@ -88,20 +88,20 @@ If you'd like further automation (Makefile CI integration, hardened image builds
 
 **Demo Script**
 
-- **Path:** `scripts/demo_provision_and_configure.sh`
+- **Path:** `scripts/ops/demo_provision_and_configure.sh`
 - **Purpose:** Runs an end-to-end demo: Terraform apply → wait for cloud-init/SSM → generate inventory → run Ansible (controller by default).
 - **Prereqs:** `terraform`, `ansible-playbook`, (optional) `aws` CLI, AWS credentials configured.
 - **Quick run (make executable first):**
 
 ```bash
-chmod +x scripts/demo_provision_and_configure.sh
-./scripts/demo_provision_and_configure.sh --tfvars terraform/aws/terraform.tfvars --auto-approve --mode ssm --playbook controller
+chmod +x scripts/ops/demo_provision_and_configure.sh
+./scripts/ops/demo_provision_and_configure.sh --tfvars terraform/aws/terraform.tfvars --auto-approve --mode ssm --playbook controller
 ```
 
 - **Non-interactive with vault file:**
 
 ```bash
-./scripts/demo_provision_and_configure.sh --tfvars terraform/aws/terraform.tfvars --auto-approve --mode ssm --playbook controller --vault-pass-file ~/.vault_pass.txt
+./scripts/ops/demo_provision_and_configure.sh --tfvars terraform/aws/terraform.tfvars --auto-approve --mode ssm --playbook controller --vault-pass-file ~/.vault_pass.txt
 ```
 
 - **Notes:** Defaults to `ssm` mode and the `controller` playbook. Use `--mode ssh` to generate an SSH/bastion-style inventory.

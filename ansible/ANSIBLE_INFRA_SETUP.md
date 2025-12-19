@@ -159,7 +159,7 @@ Step 5 — Create Vault file for secrets (required)
 
 ```bash
 cd gitRepos/ansible-jenkins
-./scripts/create_vault.sh inventories/group_vars/vault.yml
+./scripts/ansible/create_vault.sh inventories/group_vars/vault.yml
 ansible-vault edit inventories/group_vars/vault.yml
 # set jenkins_admin_password and agent_secret
 ```
@@ -280,7 +280,7 @@ cp ../../inventories/group_vars/ssm-jenkins_controller.yml ../../inventories/dev
 cp ../../inventories/group_vars/ssm-jenkins_agent.yml ../../inventories/dev/group_vars/jenkins_agent.yml
 
 # Create vault and edit secrets
-../scripts/create_vault.sh ../../inventories/group_vars/vault.yml
+../scripts/ansible/create_vault.sh ../../inventories/group_vars/vault.yml
 ansible-vault edit ../../inventories/group_vars/vault.yml
 
 # Run Ansible to configure controller and agents
@@ -297,19 +297,19 @@ Keep this file as the single, up-to-date reference for provisioning and configur
 
 A convenience script is provided to run a typical end-to-end demo: provision infra with Terraform, wait for instances/SSM, generate the inventory, and run the Ansible playbook.
 
-Path: `scripts/demo_provision_and_configure.sh`
+Path: `scripts/ops/demo_provision_and_configure.sh`
 
 Quick usage:
 
 ```bash
 # make executable once
-chmod +x scripts/demo_provision_and_configure.sh
+chmod +x scripts/ops/demo_provision_and_configure.sh
 
 # Run interactive terraform apply, then configure controller via SSM
-./scripts/demo_provision_and_configure.sh --tfvars terraform/aws/terraform.tfvars --mode ssm --playbook controller
+./scripts/ops/demo_provision_and_configure.sh --tfvars terraform/aws/terraform.tfvars --mode ssm --playbook controller
 
 # Non-interactive terraform + vault password file
-./scripts/demo_provision_and_configure.sh --tfvars terraform/aws/terraform.tfvars --auto-approve --mode ssm --playbook controller --vault-pass-file ~/.vault_pass.txt
+./scripts/ops/demo_provision_and_configure.sh --tfvars terraform/aws/terraform.tfvars --auto-approve --mode ssm --playbook controller --vault-pass-file ~/.vault_pass.txt
 ```
 
 Notes:
