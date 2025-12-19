@@ -63,9 +63,9 @@ if [[ "$MODE" != "ssm" && "$MODE" != "ssh" ]]; then
 fi
 
 case "$PLAYBOOK" in
-  controller) PLAYBOOK_PATH="$REPO_ROOT/playbooks/controller.yml";;
-  agents) PLAYBOOK_PATH="$REPO_ROOT/playbooks/agents.yml";;
-  site) PLAYBOOK_PATH="$REPO_ROOT/playbooks/site.yml";;
+  controller) PLAYBOOK_PATH="$REPO_ROOT/ansible/playbooks/controller.yml";;
+  agents) PLAYBOOK_PATH="$REPO_ROOT/ansible/playbooks/agents.yml";;
+  site) PLAYBOOK_PATH="$REPO_ROOT/ansible/playbooks/site.yml";;
   *) echo "Unknown playbook: $PLAYBOOK"; exit 2;;
 esac
 

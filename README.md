@@ -4,8 +4,9 @@ Repository folder structure (top-level):
 
 ```
 ansible-jenkins/
-├─ ansible.cfg                 # Ansible project defaults
-├─ inventories/
+├─ ansible/                    # Ansible project (configs, playbooks, roles, inventories)
+│  ├─ ansible.cfg               # Ansible project defaults
+│  ├─ inventories/
 │  ├─ dev/                     # Development inventory
 │  │  └─ hosts.ini
 │  ├─ prod/                    # Production inventory
@@ -20,20 +21,20 @@ ansible-jenkins/
 This repository is an opinionated Ansible scaffold to manage a Jenkins controller and Jenkins agents across `dev` and `prod` inventories. It also includes Terraform examples and helper scripts to provision AWS infrastructure and generate inventories (SSH or SSM).
 
 **Top-level layout**
-- `ansible.cfg` — Ansible defaults (inventory, roles_path, forks, become).
-- `inventories/` — `dev/` and `prod/` inventories and `group_vars/` (environment-scoped variables).
-- `playbooks/` — `controller.yml`, `agents.yml`, `site.yml` orchestration playbooks.
-- `roles/` — `jenkins_controller/` and `jenkins_agent/` using a standard role layout (`tasks/`, `handlers/`, `defaults/`, `vars/`, `templates/`, `meta/`).
-- `infra/aws/` — Terraform code to provision VPC, bastion, controller/agent instances, IAM role for SSM, and helper scripts (`generate_inventory.sh`).
-- `ANSIBLE_INFRA_SETUP.md` — ordered provision → configure walkthrough and troubleshooting guidance.
+-- `ansible/ansible.cfg` — Ansible defaults (inventory, roles_path, forks, become).
+-- `ansible/inventories/` — `dev/` and `prod/` inventories and `group_vars/` (environment-scoped variables).
+-- `ansible/playbooks/` — `controller.yml`, `agents.yml`, `site.yml` orchestration playbooks.
+-- `ansible/roles/` — `jenkins_controller/` and `jenkins_agent/` using a standard role layout (`tasks/`, `handlers/`, `defaults/`, `vars/`, `templates/`, `meta/`).
+-- `infra/aws/` — Terraform code to provision VPC, bastion, controller/agent instances, IAM role for SSM, and helper scripts (`generate_inventory.sh`).
+-- `ansible/ANSIBLE_INFRA_SETUP.md` — ordered provision → configure walkthrough and troubleshooting guidance.
 
 **Quick Start (two common flows)**n
 
 - Option A — Static inventory (existing hosts):
-  1. Edit `inventories/dev/hosts.ini` or `inventories/prod/hosts.ini` and `inventories/group_vars/*`.
+  1. Edit `ansible/inventories/dev/hosts.ini` or `ansible/inventories/prod/hosts.ini` and `ansible/inventories/group_vars/*`.
   2. (Optional) Create vaulted secrets: `./scripts/create_vault.sh` or `ansible-vault create inventories/group_vars/vault.yml`.
-  3. Run controller: `ansible-playbook -i inventories/dev playbooks/controller.yml`.
-  4. Run agents: `ansible-playbook -i inventories/dev playbooks/agents.yml`.
+  3. Run controller: `ansible-playbook -i ansible/inventories/dev ansible/playbooks/controller.yml`.
+  4. Run agents: `ansible-playbook -i ansible/inventories/dev ansible/playbooks/agents.yml`.
 
 - Option B — Terraform provisioned (AWS t2.micro recommended for demo):
   1. Change into `infra/aws/` and update `variables.tf` (region, `admin_cidr`, `key_name`, instance type, agent count).
@@ -50,8 +51,8 @@ cd infra/aws
   4. Run playbooks using the generated inventory, e.g.:
 
 ```bash
-ansible-playbook -i infra/aws/inventory playbooks/controller.yml --ask-vault-pass
-ansible-playbook -i infra/aws/inventory playbooks/agents.yml --ask-vault-pass
+ansible-playbook -i infra/aws/inventory ansible/playbooks/controller.yml --ask-vault-pass
+ansible-playbook -i infra/aws/inventory ansible/playbooks/agents.yml --ask-vault-pass
 ```
 
 **Recommended connection method**
@@ -71,7 +72,7 @@ ansible-playbook -i infra/aws/inventory playbooks/agents.yml --ask-vault-pass
 - A GitHub Actions workflow is included to run `terraform validate` and `ansible-lint` (`.github/workflows/ci.yml`).
 
 **Where to find details**
-- Follow the step-by-step guide in `ANSIBLE_INFRA_SETUP.md` for a copyable provision → configure sequence, checks, and troubleshooting.
+-- Follow the step-by-step guide in `ansible/ANSIBLE_INFRA_SETUP.md` for a copyable provision → configure sequence, checks, and troubleshooting.
 - Inventory generator: `infra/aws/generate_inventory.sh` (supports `ssm` and `ssh` modes).
 
 **Security notes (must read before applying infra)**

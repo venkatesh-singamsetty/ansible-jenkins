@@ -18,7 +18,7 @@ crash.log
 
 ## Terraform generated inventory (script output)
 infra/aws/inventory
-inventories/generated.ini
+ansible/inventories/generated.ini
 
 ## AWS SSH key pairs (private keys) - do NOT commit private keys
 infra/aws/ssh/*.pem
