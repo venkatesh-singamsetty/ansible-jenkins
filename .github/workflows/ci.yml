@@ -1,0 +1,66 @@
+name: CI - Terraform & Ansible
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  terraform-validate:
+    name: Terraform validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: '1.5.0'
+      - name: Terraform init
+        working-directory: infra/aws
+        run: terraform init -input=false
+      - name: Terraform fmt check
+        working-directory: infra/aws
+        run: terraform fmt -check -recursive
+      - name: Terraform validate
+        working-directory: infra/aws
+        run: terraform validate
+
+  ansible-lint:
+    name: Ansible Lint
+    runs-on: ubuntu-latest
+    needs: terraform-validate
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Install ansible and ansible-lint
+        run: |
+          python -m pip install --upgrade pip
+          pip install ansible ansible-lint
+      - name: Run ansible-lint on playbooks and roles
+        run: |
+          ansible-lint playbooks/controller.yml || true
+          ansible-lint playbooks/agents.yml || true
+          ansible-lint roles/jenkins_controller || true
+          ansible-lint roles/jenkins_agent || true
+
+  terraform-security:
+    name: Terraform security scan (optional)
+    runs-on: ubuntu-latest
+    needs: terraform-validate
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: '1.5.0'
+      - name: Install tfsec
+        run: |
+          sudo apt-get update && sudo apt-get install -y curl
+          curl -sSL https://raw.githubusercontent.com/aquasecurity/tfsec/master/scripts/install_linux.sh | bash
+      - name: Run tfsec
+        working-directory: infra/aws
+        run: tfsec . || true
