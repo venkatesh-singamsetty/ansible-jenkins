@@ -38,14 +38,14 @@ Before running Terraform you will need an AWS account and a user (or role) with 
 - `IAMFullAccess` (or minimal IAM: CreateRole, PutRolePolicy, CreateInstanceProfile)
 - `AmazonSSMFullAccess` (required if you'll use SSM features from the controller; instances use `AmazonSSMManagedInstanceCore` via instance profile)
 
-If you prefer least-privilege, scope policies to the specific actions in `infra/aws/main.tf`.
+If you prefer least-privilege, scope policies to the specific actions in `terraform/aws/main.tf`.
 
 Notes:
 - Ensure your account has limits for EC2 in the chosen region and that `t2.micro` is available.
 - Billing: running these EC2 instances will incur charges. Destroy resources after testing with `make destroy`.
 
 Step 1 — Review and set Terraform variables (enterprise)
-1. Open `infra/aws/variables.tf` and review defaults. Important variables to set before apply:
+1. Open `terraform/aws/variables.tf` and review defaults. Important variables to set before apply:
    - `aws_region` (default `us-east-1`)
    - `instance_type` (default `t2.micro` — change for production)
    - `agent_count` (number of agents)
@@ -64,7 +64,7 @@ Step 2 — Initialize and apply Terraform (provision infra)
 1. Change directory and initialize Terraform:
 
 ```bash
-cd gitRepos/ansible-jenkins/infra/aws
+cd gitRepos/ansible-jenkins/terraform/aws
 terraform init
 ```
 
@@ -104,7 +104,7 @@ chmod 600 ~/.vault_pass.txt
 make configure VAULT_PASS_FILE=~/.vault_pass.txt
 ```
 
-Manual step: after apply completes, Terraform prints outputs including `bastion_public_ip`, `controller_private_ip`, `agent_private_ips`, and `ssh_private_key_path`. Confirm the `ssh_private_key_path` file exists under `infra/aws/ssh/` and has `0600` permissions.
+Manual step: after apply completes, Terraform prints outputs including `bastion_public_ip`, `controller_private_ip`, `agent_private_ips`, and `ssh_private_key_path`. Confirm the `ssh_private_key_path` file exists under `terraform/aws/ssh/` and has `0600` permissions.
 
 Step 3 — Choose connection mode: SSM (recommended) or SSH via Bastion
 - Recommended (SSM): safer (no inbound SSH rules required), audit-friendly, uses IAM + SSM.
@@ -117,7 +117,7 @@ Step 4A — Configure SSM mode (recommended)
 2. Generate inventory in SSM mode:
 
 ```bash
-cd gitRepos/ansible-jenkins/infra/aws
+cd gitRepos/ansible-jenkins/terraform/aws
 ./generate_inventory.sh ssm
 ```
 
@@ -146,7 +146,7 @@ Step 4B — Configure SSH via Bastion (fallback)
 1. Generate inventory (SSH mode) which will include bastion and ProxyCommand entries:
 
 ```bash
-cd gitRepos/ansible-jenkins/infra/aws
+cd gitRepos/ansible-jenkins/terraform/aws
 ./generate_inventory.sh ssh
 ```
 
@@ -202,7 +202,7 @@ User data and SSH hardening
 --------------------------------
 The Terraform `user_data` for bastion, controller, and agent instances now:
 
-- Creates a non-root `ansible` user and populates `/home/ansible/.ssh/authorized_keys` with the generated public key (the private key is saved under `infra/aws/ssh/`).
+- Creates a non-root `ansible` user and populates `/home/ansible/.ssh/authorized_keys` with the generated public key (the private key is saved under `terraform/aws/ssh/`).
 - Adds `ansible` to the `sudo` group so Ansible can `become` for privileged tasks.
 - Attempts to install `amazon-ssm-agent` (if available) so SSM mode works on fresh images.
 - Disables `PasswordAuthentication` and `PermitRootLogin` in `sshd_config` for basic SSH hardening.
@@ -248,11 +248,11 @@ Step 9 — Cleanup when finished (optional)
 1. Destroy Terraform-managed resources:
 
 ```bash
-cd gitRepos/ansible-jenkins/infra/aws
+cd gitRepos/ansible-jenkins/terraform/aws
 terraform destroy -auto-approve
 ```
 
-Manual step: remove any sensitive files created locally (private key under `infra/aws/ssh/` and any unencrypted files). The repo includes `infra/aws/ssh/.gitignore` — ensure you do not commit keys.
+Manual step: remove any sensitive files created locally (private key under `terraform/aws/ssh/` and any unencrypted files). The repo includes `terraform/aws/ssh/.gitignore` — ensure you do not commit keys.
 
 Troubleshooting notes
 - If Ansible cannot connect in SSM mode, verify the instance shows up in SSM (`aws ssm describe-instance-information`) and your local AWS credentials have SSM `StartSession` permissions.
@@ -267,7 +267,7 @@ Appendix: quick commands summary
 
 ```bash
 # Provision infrastructure
-cd gitRepos/ansible-jenkins/infra/aws
+cd gitRepos/ansible-jenkins/terraform/aws
 terraform init && terraform apply -auto-approve
 
 # Generate inventory (ssm recommended)
@@ -306,10 +306,10 @@ Quick usage:
 chmod +x scripts/demo_provision_and_configure.sh
 
 # Run interactive terraform apply, then configure controller via SSM
-./scripts/demo_provision_and_configure.sh --tfvars infra/aws/terraform.tfvars --mode ssm --playbook controller
+./scripts/demo_provision_and_configure.sh --tfvars terraform/aws/terraform.tfvars --mode ssm --playbook controller
 
 # Non-interactive terraform + vault password file
-./scripts/demo_provision_and_configure.sh --tfvars infra/aws/terraform.tfvars --auto-approve --mode ssm --playbook controller --vault-pass-file ~/.vault_pass.txt
+./scripts/demo_provision_and_configure.sh --tfvars terraform/aws/terraform.tfvars --auto-approve --mode ssm --playbook controller --vault-pass-file ~/.vault_pass.txt
 ```
 
 Notes:

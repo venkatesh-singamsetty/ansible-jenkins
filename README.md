@@ -25,7 +25,7 @@ This repository is an opinionated Ansible scaffold to manage a Jenkins controlle
 -- `ansible/inventories/` — `dev/` and `prod/` inventories and `group_vars/` (environment-scoped variables).
 -- `ansible/playbooks/` — `controller.yml`, `agents.yml`, `site.yml` orchestration playbooks.
 -- `ansible/roles/` — `jenkins_controller/` and `jenkins_agent/` using a standard role layout (`tasks/`, `handlers/`, `defaults/`, `vars/`, `templates/`, `meta/`).
--- `infra/aws/` — Terraform code to provision VPC, bastion, controller/agent instances, IAM role for SSM, and helper scripts (`generate_inventory.sh`).
+-- `terraform/aws/` — Terraform code to provision VPC, bastion, controller/agent instances, IAM role for SSM, and helper scripts (`generate_inventory.sh`).
 -- `ansible/ANSIBLE_INFRA_SETUP.md` — ordered provision → configure walkthrough and troubleshooting guidance.
 
 **Quick Start (two common flows)**n
@@ -37,12 +37,12 @@ This repository is an opinionated Ansible scaffold to manage a Jenkins controlle
   4. Run agents: `ansible-playbook -i ansible/inventories/dev ansible/playbooks/agents.yml`.
 
 - Option B — Terraform provisioned (AWS t2.micro recommended for demo):
-  1. Change into `infra/aws/` and update `variables.tf` (region, `admin_cidr`, `key_name`, instance type, agent count).
+  1. Change into `terraform/aws/` and update `variables.tf` (region, `admin_cidr`, `key_name`, instance type, agent count).
   2. Run `terraform init && terraform apply` (follow prompts). Wait ~1–2 minutes for cloud-init to finish.
   3. Generate inventory (SSM recommended):
 
 ```bash
-cd infra/aws
+cd terraform/aws
 ./generate_inventory.sh ssm      # preferred: uses SSM Session Manager
 # or
 ./generate_inventory.sh ssh      # uses bastion + ProxyJump
@@ -51,8 +51,8 @@ cd infra/aws
   4. Run playbooks using the generated inventory, e.g.:
 
 ```bash
-ansible-playbook -i infra/aws/inventory ansible/playbooks/controller.yml --ask-vault-pass
-ansible-playbook -i infra/aws/inventory ansible/playbooks/agents.yml --ask-vault-pass
+ansible-playbook -i terraform/aws/inventory ansible/playbooks/controller.yml --ask-vault-pass
+ansible-playbook -i terraform/aws/inventory ansible/playbooks/agents.yml --ask-vault-pass
 ```
 
 **Recommended connection method**
@@ -60,7 +60,7 @@ ansible-playbook -i infra/aws/inventory ansible/playbooks/agents.yml --ask-vault
 
 **Prerequisites**
 - `ansible` (latest stable). Install via `pip install ansible` or your package manager.
-- `terraform` for `infra/aws/` provisioning.
+- `terraform` for `terraform/aws/` provisioning.
 - `aws` CLI configured with credentials for your account (for Terraform/SSM operations).
 - Optional for local role testing: `molecule`, `docker`, and `testinfra`.
 
@@ -73,7 +73,7 @@ ansible-playbook -i infra/aws/inventory ansible/playbooks/agents.yml --ask-vault
 
 **Where to find details**
 -- Follow the step-by-step guide in `ansible/ANSIBLE_INFRA_SETUP.md` for a copyable provision → configure sequence, checks, and troubleshooting.
-- Inventory generator: `infra/aws/generate_inventory.sh` (supports `ssm` and `ssh` modes).
+- Inventory generator: `terraform/aws/generate_inventory.sh` (supports `ssm` and `ssh` modes).
 
 **Security notes (must read before applying infra)**
 - Set `admin_cidr` in Terraform variables before `terraform apply` to restrict management access.
@@ -95,13 +95,13 @@ If you'd like further automation (Makefile CI integration, hardened image builds
 
 ```bash
 chmod +x scripts/demo_provision_and_configure.sh
-./scripts/demo_provision_and_configure.sh --tfvars infra/aws/terraform.tfvars --auto-approve --mode ssm --playbook controller
+./scripts/demo_provision_and_configure.sh --tfvars terraform/aws/terraform.tfvars --auto-approve --mode ssm --playbook controller
 ```
 
 - **Non-interactive with vault file:**
 
 ```bash
-./scripts/demo_provision_and_configure.sh --tfvars infra/aws/terraform.tfvars --auto-approve --mode ssm --playbook controller --vault-pass-file ~/.vault_pass.txt
+./scripts/demo_provision_and_configure.sh --tfvars terraform/aws/terraform.tfvars --auto-approve --mode ssm --playbook controller --vault-pass-file ~/.vault_pass.txt
 ```
 
 - **Notes:** Defaults to `ssm` mode and the `controller` playbook. Use `--mode ssh` to generate an SSH/bastion-style inventory.

@@ -1,7 +1,7 @@
 # Makefile for provisioning and configuring Jenkins infra + Ansible
 # Usage: make plan|apply|provision|generate-inventory|configure|destroy
 
-TF_DIR=infra/aws
+TF_DIR=terraform/aws
 INVENTORY_PATH=$(TF_DIR)/inventory
 VAULT_PASS_FILE?=
 SSM_OR_SSH?=ssm

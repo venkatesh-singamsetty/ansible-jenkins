@@ -4,7 +4,7 @@ IFS=$'\n\t'
 
 # demo_provision_and_configure.sh
 # Typical end-to-end demo script for this repo:
-# 1) terraform apply (infra/aws)
+# 1) terraform apply (terraform/aws)
 # 2) wait for instances and SSM
 # 3) generate inventory (ssm or ssh)
 # 4) run ansible playbook (controller by default)
@@ -14,7 +14,7 @@ usage() {
 Usage: $0 [options]
 
 Options:
-  --tfvars PATH            Path to terraform tfvars file (default: infra/aws/terraform.tfvars)
+  --tfvars PATH            Path to terraform tfvars file (default: terraform/aws/terraform.tfvars)
   --auto-approve           Pass -auto-approve to terraform apply (non-interactive)
   --mode MODE              Inventory mode: ssm (default) or ssh
   --inventory-out PATH     Path to write generated inventory (default: inventories/generated.ini)
@@ -24,7 +24,7 @@ Options:
   -h, --help               Show this help
 
 Example:
-  $0 --tfvars infra/aws/terraform.tfvars --auto-approve --mode ssm --playbook controller
+  $0 --tfvars terraform/aws/terraform.tfvars --auto-approve --mode ssm --playbook controller
 
 Note: Ensure you have AWS creds in env or configured (~/.aws) and tools installed: terraform, ansible-playbook, aws (optional).
 EOF
@@ -32,7 +32,7 @@ EOF
 
 # Defaults
 REPO_ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
-TF_DIR="$REPO_ROOT/infra/aws"
+TF_DIR="$REPO_ROOT/terraform/aws"
 TF_VARS="$TF_DIR/terraform.tfvars"
 AUTO_APPROVE="false"
 MODE="ssm"
@@ -99,10 +99,10 @@ fi
 echo "[3/5] Generating inventory (mode=$MODE) -> $INVENTORY_OUT"
 cd "$REPO_ROOT"
 mkdir -p "$(dirname "$INVENTORY_OUT")"
-if [[ ! -x "$REPO_ROOT/infra/aws/generate_inventory.sh" ]]; then
-  chmod +x "$REPO_ROOT/infra/aws/generate_inventory.sh" || true
+if [[ ! -x "$REPO_ROOT/terraform/aws/generate_inventory.sh" ]]; then
+  chmod +x "$REPO_ROOT/terraform/aws/generate_inventory.sh" || true
 fi
-./infra/aws/generate_inventory.sh "$MODE" > "$INVENTORY_OUT"
+./terraform/aws/generate_inventory.sh "$MODE" > "$INVENTORY_OUT"
 
 # Step 4: Run Ansible playbook
 echo "[4/5] Running Ansible playbook: $PLAYBOOK_PATH with inventory $INVENTORY_OUT"

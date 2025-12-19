@@ -17,13 +17,13 @@ jobs:
         with:
           terraform_version: '1.5.0'
       - name: Terraform init
-        working-directory: infra/aws
+        working-directory: terraform/aws
         run: terraform init -input=false
       - name: Terraform fmt check
-        working-directory: infra/aws
+        working-directory: terraform/aws
         run: terraform fmt -check -recursive
       - name: Terraform validate
-        working-directory: infra/aws
+        working-directory: terraform/aws
         run: terraform validate
 
   ansible-lint:
@@ -62,5 +62,5 @@ jobs:
           sudo apt-get update && sudo apt-get install -y curl
           curl -sSL https://raw.githubusercontent.com/aquasecurity/tfsec/master/scripts/install_linux.sh | bash
       - name: Run tfsec
-        working-directory: infra/aws
+        working-directory: terraform/aws
         run: tfsec . || true

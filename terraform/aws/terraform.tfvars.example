@@ -1,4 +1,4 @@
-## Example Terraform variables for infra/aws
+## Example Terraform variables for terraform/aws
 # Copy to terraform.tfvars and edit values before running `terraform apply`
 
 aws_region = "us-east-1"
