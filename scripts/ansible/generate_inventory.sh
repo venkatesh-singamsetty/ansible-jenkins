@@ -1,12 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Wrapper for backward compatibility. Forwards to canonical script under scripts/ansible.
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
-exec "$SCRIPT_DIR/scripts/ansible/generate_inventory.sh" "$@"
-#!/usr/bin/env bash
-set -euo pipefail
-
 # generate_inventory.sh
 # Generates `inventories/dev/hosts.ini` from Terraform outputs.
 # Usage:
