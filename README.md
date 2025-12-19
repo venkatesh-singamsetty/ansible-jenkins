@@ -15,206 +15,92 @@ ansible-jenkins/
 │  ├─ site.yml                 # Orchestrates controller + agents across inventory
 │  ├─ controller.yml           # Applies controller role to controller hosts
 │  └─ agents.yml               # Applies agent role to agent hosts
-├─ roles/
-│  ├─ jenkins_controller/
-│  │  ├─ tasks/
-│  │  ├─ handlers/
-│  │  ├─ defaults/
-│  │  ├─ vars/
-│  │  ├─ templates/
-│  │  └─ molecule/             # Molecule test skeletons
-│  └─ jenkins_agent/
-│     ├─ tasks/
-│     ├─ handlers/
-│     ├─ defaults/
-│     ├─ vars/
-│     ├─ templates/
-│     └─ molecule/
-└─ README.md
-```
-
-Short comments and purpose (high-level):
-
-- `ansible.cfg` contains project-wide settings (inventory path, role path, become settings).
-- `inventories/` contains separate `dev` and `prod` inventories and `group_vars` for environment-scoped variables.
-- `playbooks/` contains orchestration playbooks; run `ansible-playbook -i inventories/dev playbooks/controller.yml` to apply controller role.
-- `roles/` contain reusable roles respecting Ansible best practices (tasks, handlers, defaults, vars, templates, meta).
-
-See the sections below for usage, Vault guidance, testing, and next steps.
-
----
-
-This repository contains an opinionated Ansible scaffold to manage a Jenkins controller and Jenkins agents across `dev` and `prod` inventories. It provides a starting point with recommended best-practices: separated inventories, `group_vars`, reusable roles, templates, handlers and Molecule test skeletons.
-
-**Prerequisites**
-- **Ansible:** 2.9+ (recommended latest stable). Install via `pip install ansible` or your platform package manager.
-- **For tests (optional):** `pip install molecule docker molecule-docker testinfra` and Docker daemon running locally.
-- **Permissions:** You need SSH access to target hosts and sudo privileges (or configure `become` accordingly).
-
-... (rest of README omitted here for brevity; unchanged)
 # jenkins-ansible
 
-This repository contains an Ansible scaffold to manage a Jenkins controller and Jenkins agents across `dev` and `prod` inventories.
+This repository is an opinionated Ansible scaffold to manage a Jenkins controller and Jenkins agents across `dev` and `prod` inventories. It also includes Terraform examples and helper scripts to provision AWS infrastructure and generate inventories (SSH or SSM).
 
-**Quick Start**
-- **Inventory:** `inventories/dev/hosts.ini` and `inventories/prod/hosts.ini` (edit host IPs and users)
-- **Playbooks:** `playbooks/controller.yml`, `playbooks/agents.yml`, and `playbooks/site.yml`
-- **Roles:** `roles/jenkins_controller` and `roles/jenkins_agent`
+**Top-level layout**
+- `ansible.cfg` — Ansible defaults (inventory, roles_path, forks, become).
+- `inventories/` — `dev/` and `prod/` inventories and `group_vars/` (environment-scoped variables).
+- `playbooks/` — `controller.yml`, `agents.yml`, `site.yml` orchestration playbooks.
+- `roles/` — `jenkins_controller/` and `jenkins_agent/` using a standard role layout (`tasks/`, `handlers/`, `defaults/`, `vars/`, `templates/`, `meta/`).
+- `infra/aws/` — Terraform code to provision VPC, bastion, controller/agent instances, IAM role for SSM, and helper scripts (`generate_inventory.sh`).
+- `ANSIBLE_INFRA_SETUP.md` — ordered provision → configure walkthrough and troubleshooting guidance.
 
-**Run (example)**
-1. Install dependencies: `pip install ansible molecule docker testinfra` (optional for local tests)
-2. Run controller playbook against dev inventory:
+**Quick Start (two common flows)**n
 
-```bash
-ansible-playbook -i inventories/dev playbooks/controller.yml
-```
+- Option A — Static inventory (existing hosts):
+  1. Edit `inventories/dev/hosts.ini` or `inventories/prod/hosts.ini` and `inventories/group_vars/*`.
+  2. (Optional) Create vaulted secrets: `./scripts/create_vault.sh` or `ansible-vault create inventories/group_vars/vault.yml`.
+  3. Run controller: `ansible-playbook -i inventories/dev playbooks/controller.yml`.
+  4. Run agents: `ansible-playbook -i inventories/dev playbooks/agents.yml`.
 
-3. Run agents playbook:
-
-```bash
-ansible-playbook -i inventories/dev playbooks/agents.yml
-```
-
-**Testing & Linting**
-- Lint roles/playbooks: `ansible-lint playbooks/controller.yml` and `ansible-lint roles/jenkins_controller/tasks/main.yml`
-- Molecule (local docker) (optional):
+- Option B — Terraform provisioned (AWS t2.micro recommended for demo):
+  1. Change into `infra/aws/` and update `variables.tf` (region, `admin_cidr`, `key_name`, instance type, agent count).
+  2. Run `terraform init && terraform apply` (follow prompts). Wait ~1–2 minutes for cloud-init to finish.
+  3. Generate inventory (SSM recommended):
 
 ```bash
-cd roles/jenkins_controller
-molecule test
-
-cd ../jenkins_agent
-molecule test
+cd infra/aws
+./generate_inventory.sh ssm      # preferred: uses SSM Session Manager
+# or
+./generate_inventory.sh ssh      # uses bastion + ProxyJump
 ```
 
-**Secrets**
-- Do NOT store real passwords in `group_vars` committed to the repo. Use Ansible Vault or your secrets manager and override `jenkins_admin_password`, `agent_secret`, and other sensitive values.
-molecule test
-# jenkins-ansible
+  4. Run playbooks using the generated inventory, e.g.:
 
-This repository contains an opinionated Ansible scaffold to manage a Jenkins controller and Jenkins agents across `dev` and `prod` inventories. It provides a starting point with recommended best-practices: separated inventories, `group_vars`, reusable roles, templates, handlers and Molecule test skeletons.
+```bash
+ansible-playbook -i infra/aws/inventory playbooks/controller.yml --ask-vault-pass
+ansible-playbook -i infra/aws/inventory playbooks/agents.yml --ask-vault-pass
+```
+
+**Recommended connection method**
+- Use SSM (`./generate_inventory.sh ssm`) when possible — simpler and more secure for private instances. SSH via a bastion is available as a fallback.
 
 **Prerequisites**
-- **Ansible:** 2.9+ (recommended latest stable). Install via `pip install ansible` or your platform package manager.
-- **For tests (optional):** `pip install molecule docker molecule-docker testinfra` and Docker daemon running locally.
-- **Permissions:** You need SSH access to target hosts and sudo privileges (or configure `become` accordingly).
+- `ansible` (latest stable). Install via `pip install ansible` or your package manager.
+- `terraform` for `infra/aws/` provisioning.
+- `aws` CLI configured with credentials for your account (for Terraform/SSM operations).
+- Optional for local role testing: `molecule`, `docker`, and `testinfra`.
 
-**Repository Layout**
-- **`ansible.cfg`**: project-wide Ansible defaults.
-- **`inventories/`**: `dev/` and `prod/` inventories with `hosts.ini` and `group_vars/`.
-- **`playbooks/`**: `controller.yml`, `agents.yml`, `site.yml` orchestration playbooks.
-- **`roles/`**: `jenkins_controller/` and `jenkins_agent/` with standard role structure (`tasks/`, `handlers/`, `defaults/`, `vars/`, `templates/`, `meta/`).
-- **`roles/*/molecule/`**: Molecule scenario skeletons for local testing.
+**Secrets & Vault**
+- Do NOT commit plaintext secrets. Use Ansible Vault for sensitive values (`jenkins_admin_password`, `agent_secret`).
+- Helper: `scripts/create_vault.sh` creates `inventories/group_vars/vault.yml` for you.
 
-**Important files created**
-- `ansible.cfg` — project defaults (inventory path, roles_path, forks, become settings).
-- `inventories/dev/hosts.ini`, `inventories/prod/hosts.ini` — sample host entries (edit to your IPs/usernames).
-- `inventories/group_vars/*.yml` — shared variables. **Do not** commit secrets.
-- `playbooks/controller.yml`, `playbooks/agents.yml`, `playbooks/site.yml` — orchestration playbooks.
-- `roles/jenkins_controller` — installs Jenkins, deploys `config.xml` template and restarts service.
-- `roles/jenkins_agent` — installs Java, creates agent user, downloads `agent.jar`, and deploys a systemd unit.
+**CI / Linting**
+- A GitHub Actions workflow is included to run `terraform validate` and `ansible-lint` (`.github/workflows/ci.yml`).
 
-**How to run**
-- Run controller playbook against `dev` inventory:
+**Where to find details**
+- Follow the step-by-step guide in `ANSIBLE_INFRA_SETUP.md` for a copyable provision → configure sequence, checks, and troubleshooting.
+- Inventory generator: `infra/aws/generate_inventory.sh` (supports `ssm` and `ssh` modes).
 
-```bash
-ansible-playbook -i gitRepos/ansible-jenkins/inventories/dev gitRepos/ansible-jenkins/playbooks/controller.yml
-```
+**Security notes (must read before applying infra)**
+- Set `admin_cidr` in Terraform variables before `terraform apply` to restrict management access.
+- The Terraform code provisions a bastion host and enables an IAM instance profile for SSM (`AmazonSSMManagedInstanceCore`) so controller/agents can be managed privately.
 
-- Run agents playbook against `dev` inventory:
+**Recent improvements (implemented)**
+- Hardened `user_data` in Terraform: creates a non-root `ansible` user, deploys the generated public key to `/home/ansible/.ssh/authorized_keys`, and performs basic SSH hardening (disables password auth and root login).
+- `Makefile` at repo root: convenience targets `plan`, `apply`, `provision`, `generate-inventory`, `configure`, and `destroy` to chain Terraform and Ansible steps.
+- Groovy init scripts added (templated): `roles/jenkins_controller/templates/init.groovy.d/01-create-admin.groovy.j2` and `02-install-plugins.groovy.j2` — these bootstrap the admin user and install plugins from `jenkins_plugins`.
 
-```bash
-ansible-playbook -i gitRepos/ansible-jenkins/inventories/dev gitRepos/ansible-jenkins/playbooks/agents.yml
-```
+If you'd like further automation (Makefile CI integration, hardened image builds, or extended Groovy logic), tell me which item to prioritize next.
 
-Replace `gitRepos/ansible-jenkins` with the path relative to where you run the commands if you run them from the repository root.
+**Demo Script**
 
-**Group vars & secrets (recommended)**
-- Use `inventories/group_vars/` for non-sensitive, environment-scoped values.
-- For secrets (e.g., `jenkins_admin_password`, `agent_secret`) use Ansible Vault. Example:
+- **Path:** `scripts/demo_provision_and_configure.sh`
+- **Purpose:** Runs an end-to-end demo: Terraform apply → wait for cloud-init/SSM → generate inventory → run Ansible (controller by default).
+- **Prereqs:** `terraform`, `ansible-playbook`, (optional) `aws` CLI, AWS credentials configured.
+- **Quick run (make executable first):**
 
 ```bash
-ansible-vault create inventories/group_vars/vault.yml
-# then edit and add: jenkins_admin_password: 'supersecret'
+chmod +x scripts/demo_provision_and_configure.sh
+./scripts/demo_provision_and_configure.sh --tfvars infra/aws/terraform.tfvars --auto-approve --mode ssm --playbook controller
 ```
 
-To run a playbook using the vault file:
+- **Non-interactive with vault file:**
 
 ```bash
-ansible-playbook -i inventories/dev playbooks/controller.yml --ask-vault-pass
+./scripts/demo_provision_and_configure.sh --tfvars infra/aws/terraform.tfvars --auto-approve --mode ssm --playbook controller --vault-pass-file ~/.vault_pass.txt
 ```
 
-Or use `--vault-password-file` with a credentials helper script.
-
-**Ansible Galaxy / External roles**
-- You can add external roles to `requirements.yml` and install them with `ansible-galaxy install -r requirements.yml`.
-
-Example `requirements.yml` snippet:
-
-```yaml
-- src: geerlingguy.java
-	version: 2.0.0
-```
-
-Install:
-
-```bash
-ansible-galaxy install -r requirements.yml
-```
-
-**Linting & Testing**
-- Lint playbooks and roles with `ansible-lint`:
-
-```bash
-pip install ansible-lint
-ansible-lint playbooks/controller.yml
-ansible-lint roles/jenkins_controller/tasks/main.yml
-```
-
-- Molecule (optional) — run role scenarios locally (requires Docker):
-
-```bash
-cd roles/jenkins_controller
-molecule test
-
-cd ../jenkins_agent
-molecule test
-```
-
-Molecule scenarios included are skeletons. Update `molecule.yml`, `converge.yml` and `tests/` with platform-appropriate images and meaningful Testinfra assertions.
-
-**Templates & Customization**
-- `roles/jenkins_controller/templates/jenkins_config.xml.j2` is a minimal skeleton — modify for your security model, admin user hashing, and plugin settings.
-- You can programmatically install plugins and create admin user via Groovy init scripts placed in `roles/jenkins_controller/files/` and deployed to `{{ jenkins_home }}/init.groovy.d/`.
-- For agent provisioning, adjust `roles/jenkins_agent/templates/agent.service.j2` ExecStart to match your connection method (JNLP, SSH, Kubernetes, etc.).
-
-**Platform considerations**
-- The current role implementations assume Debian-based targets (apt). To support RHEL/CentOS, add conditional tasks using `ansible_facts['pkg_mgr']` and a `yum`/`dnf` flow for repositories and package names.
-
-**CI recommendations (GitHub Actions example)**
-- Run `ansible-lint` and optionally `molecule` in CI. Example job snippet:
-
-```yaml
-jobs:
-	lint:
-		runs-on: ubuntu-latest
-		steps:
-			- uses: actions/checkout@v4
-			- uses: actions/setup-python@v4
-				with:
-					python-version: '3.x'
-			- run: pip install ansible ansible-lint
-			- run: ansible-lint playbooks/controller.yml
-```
-
-**Security notes**
-- Never commit plaintext credentials. Use Ansible Vault or external secret stores (HashiCorp Vault, AWS Secrets Manager, Azure KeyVault).
-- Limit access to the Jenkins controller and agent ports; use firewalls and private networks.
-
-**Next steps (I can implement)**
-- add an example `requirements.yml` and wire `ansible-galaxy` installs
-- add an Ansible Vault example and helper script to encrypt/decrypt secrets
-- implement plugin installation and Groovy init scripts to bootstrap admin user and initial jobs
-- extend Molecule tests with real Testinfra checks and add CI integration
-
-If you want me to implement one of the next steps, pick which one and I'll add it to the repo.
+- **Notes:** Defaults to `ssm` mode and the `controller` playbook. Use `--mode ssh` to generate an SSH/bastion-style inventory.

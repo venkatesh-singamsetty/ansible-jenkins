@@ -1,0 +1,22 @@
+#!groovy
+// 01-create-admin.groovy
+// Creates an initial admin user if not present. Values should be templated by Ansible
+import jenkins.model.*
+import hudson.security.*
+
+def instance = Jenkins.get()
+println("[init] Checking for admin user")
+
+def hudsonRealm = instance.getSecurityRealm()
+if (hudsonRealm instanceof HudsonPrivateSecurityRealm) {
+  def user = hudsonRealm.getUser("{{ jenkins_admin_user | default('admin') }}")
+  if (user == null) {
+    println("[init] Creating admin user {{ jenkins_admin_user | default('admin') }}")
+    hudsonRealm.createAccount("{{ jenkins_admin_user | default('admin') }}", "{{ jenkins_admin_password | default('change-me') }}")
+    instance.save()
+  } else {
+    println("[init] Admin user already exists")
+  }
+} else {
+  println("[init] Security realm is not HudsonPrivateSecurityRealm; skipping admin creation")
+}

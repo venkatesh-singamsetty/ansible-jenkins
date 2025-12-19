@@ -1,0 +1,14 @@
+## Example Terraform variables for infra/aws
+# Copy to terraform.tfvars and edit values before running `terraform apply`
+
+aws_region = "us-east-1"
+instance_type = "t2.micro"
+agent_count = 2
+enable_nat_gateway = true
+vpc_cidr = "10.0.0.0/16"
+public_subnet_cidr = "10.0.1.0/24"
+private_subnet_cidr = "10.0.2.0/24"
+# IMPORTANT: set this to your office/VPN IP range (do NOT leave 0.0.0.0/0 in production)
+admin_cidr = "203.0.113.0/32"
+# Prefix for generated ssh key name
+ssh_key_name_prefix = "jenkins-ansible-key"

@@ -3,7 +3,7 @@ galaxy_info:
   author: venkat
   description: Role to install and configure Jenkins controller
   license: MIT
-  min_ansible_version: 2.9
+  min_ansible_version: "2.9"
   platforms:
     - name: Debian
       versions:

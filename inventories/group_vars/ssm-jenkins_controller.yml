@@ -1,0 +1,8 @@
+---
+# Role-specific SSM group_vars for Jenkins controller hosts
+# Place in inventories/dev/group_vars/jenkins_controller.yml or include via inventories/group_vars/ssm.yml
+ansible_connection: aws_ssm
+ansible_ssm_region: "{{ lookup('env','AWS_REGION') | default('us-east-1') }}"
+
+# Controller variables remain the same; secrets should be provided via vault
+# jenkins_home, jenkins_http_port etc. are defined in inventories/group_vars/jenkins_controller.yml

@@ -1,5 +1,11 @@
 ---
-jenkins_http_port: 8080
-jenkins_package_state: present
-jenkins_version: latest
-openjdk_package: openjdk-11-jre-headless
+jenkins_controller_http_port: 8080
+jenkins_controller_package_state: present
+jenkins_controller_version: latest
+jenkins_controller_openjdk_package: openjdk-11-jre-headless
+
+# Backwards compatibility (old names pointing to new)
+jenkins_http_port: "{{ jenkins_controller_http_port }}"
+jenkins_package_state: "{{ jenkins_controller_package_state }}"
+jenkins_version: "{{ jenkins_controller_version }}"
+openjdk_package: "{{ jenkins_controller_openjdk_package }}"

@@ -1,0 +1,6 @@
+---
+# Role-specific SSM group_vars for Jenkins agent hosts
+ansible_connection: aws_ssm
+ansible_ssm_region: "{{ lookup('env','AWS_REGION') | default('us-east-1') }}"
+
+# When using SSM, agent_secret should still be provided via vault or external secret manager

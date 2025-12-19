@@ -4,47 +4,77 @@
 # Notes: variables are provided via `defaults/` and `inventories/group_vars`
 
 - name: Ensure apt cache is up to date
-  apt:
-    update_cache: yes
+  ansible.builtin.apt:
+    update_cache: true
   when: ansible_facts['pkg_mgr'] == 'apt'
 
 - name: Install Java runtime (controller)
-  package:
-    name: "{{ openjdk_package }}"
+  ansible.builtin.package:
+    name: "{{ jenkins_controller_openjdk_package }}"
     state: present
 
 - name: Add Jenkins apt key
-  apt_key:
-    url: "{{ jenkins_repo_key_url }}"
+  ansible.builtin.apt_key:
+    url: "{{ jenkins_controller_repo_key_url }}"
     state: present
   when: ansible_facts['pkg_mgr'] == 'apt'
 
 - name: Add Jenkins apt repository
-  apt_repository:
-    repo: "{{ jenkins_repo_deb }}"
+  ansible.builtin.apt_repository:
+    repo: "{{ jenkins_controller_repo_deb }}"
     state: present
   when: ansible_facts['pkg_mgr'] == 'apt'
 
 - name: Install Jenkins package
-  package:
-    name: "{{ jenkins_package_name }}"
-    state: "{{ jenkins_package_state }}"
+  ansible.builtin.package:
+    name: "{{ jenkins_controller_package_name | default(jenkins_package_name | default('jenkins')) }}"
+    state: "{{ jenkins_controller_package_state | default(jenkins_package_state) }}"
   notify: Restart Jenkins
 
 - name: Ensure Jenkins home directory permissions
-  file:
-    path: "{{ jenkins_home }}"
+  ansible.builtin.file:
+    path: "{{ jenkins_controller_home | default(jenkins_home) }}"
     owner: jenkins
     group: jenkins
     mode: '0755'
     state: directory
-  when: jenkins_home is defined
+  when: jenkins_controller_home is defined or jenkins_home is defined
 
 - name: Deploy Jenkins config.xml
-  template:
+  ansible.builtin.template:
     src: jenkins_config.xml.j2
-    dest: "{{ jenkins_home }}/config.xml"
+    dest: "{{ jenkins_controller_home | default(jenkins_home) }}/config.xml"
     owner: jenkins
     group: jenkins
     mode: '0644'
   notify: Restart Jenkins
+
+# Deploy Groovy init scripts to bootstrap admin user and plugins (if provided)
+- name: Ensure Jenkins init.groovy.d directory
+  ansible.builtin.file:
+    path: "{{ jenkins_controller_home | default(jenkins_home) }}/init.groovy.d"
+    state: directory
+    owner: jenkins
+    group: jenkins
+    mode: '0755'
+  when: jenkins_controller_home is defined or jenkins_home is defined
+
+- name: Deploy groovy script: create admin
+  ansible.builtin.template:
+    src: init.groovy.d/01-create-admin.groovy.j2
+    dest: "{{ jenkins_controller_home | default(jenkins_home) }}/init.groovy.d/01-create-admin.groovy"
+    owner: jenkins
+    group: jenkins
+    mode: '0644'
+  notify: Restart Jenkins
+  when: jenkins_controller_home is defined or jenkins_home is defined
+
+- name: Deploy groovy script: install plugins
+  ansible.builtin.template:
+    src: init.groovy.d/02-install-plugins.groovy.j2
+    dest: "{{ jenkins_controller_home | default(jenkins_home) }}/init.groovy.d/02-install-plugins.groovy"
+    owner: jenkins
+    group: jenkins
+    mode: '0644'
+  notify: Restart Jenkins
+  when: jenkins_controller_home is defined or jenkins_home is defined

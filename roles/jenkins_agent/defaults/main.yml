@@ -1,8 +1,17 @@
 ---
-agent_workdir: /var/jenkins
-agent_user: jenkins
-agent_group: jenkins
-agent_jar_path: /opt/jenkins
-agent_jar: agent.jar
-agent_service_name: jenkins-agent
-java_package: openjdk-11-jre-headless
+jenkins_agent_workdir: /var/jenkins
+jenkins_agent_user: jenkins
+jenkins_agent_group: jenkins
+jenkins_agent_jar_path: /opt/jenkins
+jenkins_agent_jar: agent.jar
+jenkins_agent_service_name: jenkins-agent
+jenkins_agent_java_package: openjdk-11-jre-headless
+
+# Backwards compatibility
+agent_workdir: "{{ jenkins_agent_workdir }}"
+agent_user: "{{ jenkins_agent_user }}"
+agent_group: "{{ jenkins_agent_group }}"
+agent_jar_path: "{{ jenkins_agent_jar_path }}"
+agent_jar: "{{ jenkins_agent_jar }}"
+agent_service_name: "{{ jenkins_agent_service_name }}"
+java_package: "{{ jenkins_agent_java_package }}"

@@ -1,5 +1,4 @@
----
----
+# ---
 # Playbook: agents.yml
 # Purpose: Apply the `jenkins_agent` role to agent hosts
 # Usage: ansible-playbook -i inventories/<env> playbooks/agents.yml

@@ -1,0 +1,12 @@
+## Example Ansible group_vars for inventories
+# Copy/rename this to inventories/dev/group_vars/jenkins_controller.yml and edit values
+
+jenkins_admin_user: "admin"
+jenkins_admin_password: "please-change-me"
+jenkins_plugins:
+  - git
+  - workflow-aggregator
+
+# Agent settings
+agent_user: "ansible"
+agent_service_name: "jenkins-agent"

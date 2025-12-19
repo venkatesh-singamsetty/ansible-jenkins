@@ -1,0 +1,14 @@
+plugin: aws_ec2
+regions:
+  - us-east-1
+filters:
+  tag:Name: jenkins-controller-*
+keyed_groups:
+  - key: tags.Name
+    prefix: tag_Name_
+
+# Usage: ansible-inventory -i inventories/aws_ec2.yml --graph
+# Requires AWS credentials available in environment (AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY)
+
+# If you use a bastion, you can configure SSH proxying in group_vars or inventory
+# Example group_vars/bastion.yml can be used to apply ansible_ssh_common_args for private hosts

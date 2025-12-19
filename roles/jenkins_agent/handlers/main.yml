@@ -1,7 +1,7 @@
 ---
 - name: Restart Jenkins Agent
-  systemd:
+  ansible.builtin.systemd:
     name: "{{ agent_service_name }}"
     state: restarted
-    daemon_reload: yes
-    enabled: yes
+    daemon_reload: true
+    enabled: true

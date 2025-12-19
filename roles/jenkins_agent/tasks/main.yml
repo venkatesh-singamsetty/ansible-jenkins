@@ -4,41 +4,41 @@
 # Notes: variables are provided via `defaults/` and `inventories/group_vars`
 
 - name: Ensure apt cache is up to date
-  apt:
-    update_cache: yes
+  ansible.builtin.apt:
+    update_cache: true
   when: ansible_facts['pkg_mgr'] == 'apt'
 
 - name: Install Java runtime (agent)
-  package:
-    name: "{{ java_package }}"
+  ansible.builtin.package:
+    name: "{{ jenkins_agent_java_package | default(java_package) }}"
     state: present
 
 - name: Ensure agent user exists
-  user:
-    name: "{{ agent_user }}"
-    system: yes
-    create_home: no
+  ansible.builtin.user:
+    name: "{{ jenkins_agent_user | default(agent_user) }}"
+    system: true
+    create_home: false
 
 - name: Create agent work directory
-  file:
-    path: "{{ agent_workdir }}"
-    owner: "{{ agent_user }}"
-    group: "{{ agent_group }}"
+  ansible.builtin.file:
+    path: "{{ jenkins_agent_workdir | default(agent_workdir) }}"
+    owner: "{{ jenkins_agent_user | default(agent_user) }}"
+    group: "{{ jenkins_agent_group | default(agent_group) }}"
     state: directory
     mode: '0755'
 
 - name: Create agent install directory
-  file:
-    path: "{{ agent_jar_path }}"
-    owner: "{{ agent_user }}"
-    group: "{{ agent_group }}"
+  ansible.builtin.file:
+    path: "{{ jenkins_agent_jar_path | default(agent_jar_path) }}"
+    owner: "{{ jenkins_agent_user | default(agent_user) }}"
+    group: "{{ jenkins_agent_group | default(agent_group) }}"
     state: directory
     mode: '0755'
 
 - name: Download Jenkins agent jar
-  get_url:
+  ansible.builtin.get_url:
     url: "{{ controller_url | default('http://localhost:8080') }}/jnlpJars/agent.jar"
-    dest: "{{ agent_jar_path }}/{{ agent_jar }}"
+    dest: "{{ (jenkins_agent_jar_path | default(agent_jar_path)) }}/{{ jenkins_agent_jar | default(agent_jar) }}"
     mode: '0755'
   register: agent_jar_download
   until: agent_jar_download is succeeded
@@ -46,8 +46,8 @@
   delay: 10
 
 - name: Deploy agent systemd unit
-  template:
+  ansible.builtin.template:
     src: agent.service.j2
-    dest: "/etc/systemd/system/{{ agent_service_name }}.service"
+    dest: "/etc/systemd/system/{{ jenkins_agent_service_name | default(agent_service_name) }}.service"
     mode: '0644'
   notify: Restart Jenkins Agent

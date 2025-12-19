@@ -1,3 +1,6 @@
 ---
 # Agent variables
-agent_systemd_unit: "{{ agent_service_name }}.service"
+jenkins_agent_systemd_unit: "{{ jenkins_agent_service_name }}.service"
+
+# Backwards compatibility
+agent_systemd_unit: "{{ jenkins_agent_systemd_unit }}"

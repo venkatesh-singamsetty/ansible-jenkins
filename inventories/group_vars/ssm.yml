@@ -1,0 +1,11 @@
+---
+# SSM-based connection defaults. Place this file in inventories/group_vars/ or include its contents
+# in your `inventories/dev/group_vars/` to enable SSM for hosts in that inventory.
+
+# Use the amazon.aws collection's SSM connection plugin
+ansible_connection: aws_ssm
+# Optional: explicitly set the region (falls back to AWS env vars / profile)
+ansible_ssm_region: "{{ lookup('env','AWS_REGION') | default('us-east-1') }}"
+
+# When using SSM you do not need ssh keys configured for the hosts.
+# If using SSM, remove or ignore `ansible_ssh_private_key_file` entries in inventory.
