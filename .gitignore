@@ -1,0 +1,85 @@
+# Repository .gitignore for ansible-jenkins
+# Purpose: ignore secrets, provisioning state, editor cruft, build artifacts
+
+## Terraform
+# State files and crash logs
+*.tfstate
+*.tfstate.backup
+crash.log
+.terraform/
+# keep .terraform.lock.hcl committed for provider pinning
+
+## Terraform variable files (often contain secrets)
+*.tfvars
+*.tfvars.json
+
+## Terraform plan output
+*.tfplan
+
+## Terraform generated inventory (script output)
+infra/aws/inventory
+inventories/generated.ini
+
+## AWS SSH key pairs (private keys) - do NOT commit private keys
+infra/aws/ssh/*.pem
+infra/aws/ssh/*.key
+infra/aws/ssh/id_rsa
+infra/aws/ssh/id_ed25519
+
+## Ansible and Vault
+# Vault password files and unencrypted vault files
+*.vault_pass
+*.vault_pass.txt
+inventories/**/group_vars/vault.yml
+inventories/**/group_vars/*.vault
+*.vault
+
+# local Ansible cache / controlpath / tmp
+.ansible/
+.ansible/tmp
+
+# ansible retry files
+*.retry
+
+## Python / virtualenv
+.venv/
+.venv-*/
+env/
+venv/
+__pycache__/
+*.py[cod]
+pip-wheel-metadata/
+
+## Molecule / Test infra
+.molecule/
+molecule_reports/
+
+## Editor/IDE
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+## OS files
+.DS_Store
+Thumbs.db
+
+## Logs and runtime
+logs/
+*.log
+
+## Node / build
+node_modules/
+dist/
+build/
+
+## CI artifacts
+.pytest_cache/
+
+## Jenkins local data (do not commit build artifacts or local jenkins directories)
+jenkins_home/
+jenkins_workdir/
+
+# Local secrets/config
+*.local
+*.secret
