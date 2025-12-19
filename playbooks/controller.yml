@@ -1,0 +1,10 @@
+---
+---
+# Playbook: controller.yml
+# Purpose: Apply the `jenkins_controller` role to controller hosts
+# Usage: ansible-playbook -i inventories/<env> playbooks/controller.yml
+- name: Configure Jenkins controller
+  hosts: jenkins_controller
+  become: true
+  roles:
+    - jenkins_controller

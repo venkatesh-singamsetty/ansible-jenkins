@@ -1,0 +1,10 @@
+---
+---
+# Playbook: agents.yml
+# Purpose: Apply the `jenkins_agent` role to agent hosts
+# Usage: ansible-playbook -i inventories/<env> playbooks/agents.yml
+- name: Configure Jenkins agents
+  hosts: jenkins_agent
+  become: true
+  roles:
+    - jenkins_agent

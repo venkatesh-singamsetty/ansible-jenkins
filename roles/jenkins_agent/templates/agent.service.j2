@@ -1,0 +1,14 @@
+[Unit]
+Description=Jenkins Agent Service
+After=network.target
+
+[Service]
+Type=simple
+User={{ agent_user }}
+Group={{ agent_group }}
+WorkingDirectory={{ agent_workdir }}
+ExecStart=/usr/bin/java -jar {{ agent_jar_path }}/{{ agent_jar }} -jnlpUrl {{ controller_url }}/computer/{{ inventory_hostname }}/jenkins-agent.jnlp -secret {{ agent_secret }} -workDir "{{ agent_workdir }}"
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

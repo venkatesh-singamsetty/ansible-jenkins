@@ -1,0 +1,10 @@
+---
+- name: Verify
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Show Jenkins service status (placeholder)
+      command: systemctl status jenkins
+      register: out
+      ignore_errors: yes
+    - debug: var=out.stdout

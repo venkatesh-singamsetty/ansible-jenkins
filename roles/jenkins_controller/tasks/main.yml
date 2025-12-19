@@ -1,0 +1,50 @@
+---
+# Role: jenkins_controller
+# Purpose: install and configure Jenkins controller
+# Notes: variables are provided via `defaults/` and `inventories/group_vars`
+
+- name: Ensure apt cache is up to date
+  apt:
+    update_cache: yes
+  when: ansible_facts['pkg_mgr'] == 'apt'
+
+- name: Install Java runtime (controller)
+  package:
+    name: "{{ openjdk_package }}"
+    state: present
+
+- name: Add Jenkins apt key
+  apt_key:
+    url: "{{ jenkins_repo_key_url }}"
+    state: present
+  when: ansible_facts['pkg_mgr'] == 'apt'
+
+- name: Add Jenkins apt repository
+  apt_repository:
+    repo: "{{ jenkins_repo_deb }}"
+    state: present
+  when: ansible_facts['pkg_mgr'] == 'apt'
+
+- name: Install Jenkins package
+  package:
+    name: "{{ jenkins_package_name }}"
+    state: "{{ jenkins_package_state }}"
+  notify: Restart Jenkins
+
+- name: Ensure Jenkins home directory permissions
+  file:
+    path: "{{ jenkins_home }}"
+    owner: jenkins
+    group: jenkins
+    mode: '0755'
+    state: directory
+  when: jenkins_home is defined
+
+- name: Deploy Jenkins config.xml
+  template:
+    src: jenkins_config.xml.j2
+    dest: "{{ jenkins_home }}/config.xml"
+    owner: jenkins
+    group: jenkins
+    mode: '0644'
+  notify: Restart Jenkins

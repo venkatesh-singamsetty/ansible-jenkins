@@ -1,0 +1,8 @@
+---
+agent_workdir: /var/jenkins
+agent_user: jenkins
+agent_group: jenkins
+agent_jar_path: /opt/jenkins
+agent_jar: agent.jar
+agent_service_name: jenkins-agent
+java_package: openjdk-11-jre-headless

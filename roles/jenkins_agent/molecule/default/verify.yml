@@ -1,0 +1,10 @@
+---
+- name: Verify
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Show agent service status (placeholder)
+      command: systemctl status {{ agent_service_name }}
+      register: out
+      ignore_errors: yes
+    - debug: var=out.stdout

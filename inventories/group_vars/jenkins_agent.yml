@@ -1,0 +1,7 @@
+---
+# Agent-specific variables
+controller_url: "http://{{ groups['jenkins_controller'][0] }}:{{ jenkins_http_port | default(8080) }}"
+agent_user: jenkins
+agent_workdir: /var/jenkins
+agent_jar: agent.jar
+agent_secret: "REPLACE_WITH_SECRET"  # override via vault/host_vars

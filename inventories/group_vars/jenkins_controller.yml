@@ -1,0 +1,10 @@
+---
+# Controller-specific variables
+jenkins_http_port: 8080
+jenkins_package_name: jenkins
+jenkins_repo_key_url: https://pkg.jenkins.io/debian-stable/jenkins.io.key
+jenkins_repo_deb: "deb https://pkg.jenkins.io/debian-stable binary/"
+jenkins_home: /var/lib/jenkins
+jenkins_admin_user: admin
+jenkins_admin_password: changeme123  # override in vault/secret in production
+jenkins_plugins: []

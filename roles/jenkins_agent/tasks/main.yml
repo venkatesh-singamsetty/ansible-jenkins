@@ -1,0 +1,53 @@
+---
+# Role: jenkins_agent
+# Purpose: install and configure Jenkins agent services
+# Notes: variables are provided via `defaults/` and `inventories/group_vars`
+
+- name: Ensure apt cache is up to date
+  apt:
+    update_cache: yes
+  when: ansible_facts['pkg_mgr'] == 'apt'
+
+- name: Install Java runtime (agent)
+  package:
+    name: "{{ java_package }}"
+    state: present
+
+- name: Ensure agent user exists
+  user:
+    name: "{{ agent_user }}"
+    system: yes
+    create_home: no
+
+- name: Create agent work directory
+  file:
+    path: "{{ agent_workdir }}"
+    owner: "{{ agent_user }}"
+    group: "{{ agent_group }}"
+    state: directory
+    mode: '0755'
+
+- name: Create agent install directory
+  file:
+    path: "{{ agent_jar_path }}"
+    owner: "{{ agent_user }}"
+    group: "{{ agent_group }}"
+    state: directory
+    mode: '0755'
+
+- name: Download Jenkins agent jar
+  get_url:
+    url: "{{ controller_url | default('http://localhost:8080') }}/jnlpJars/agent.jar"
+    dest: "{{ agent_jar_path }}/{{ agent_jar }}"
+    mode: '0755'
+  register: agent_jar_download
+  until: agent_jar_download is succeeded
+  retries: 3
+  delay: 10
+
+- name: Deploy agent systemd unit
+  template:
+    src: agent.service.j2
+    dest: "/etc/systemd/system/{{ agent_service_name }}.service"
+    mode: '0644'
+  notify: Restart Jenkins Agent

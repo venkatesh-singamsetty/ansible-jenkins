@@ -1,0 +1,3 @@
+---
+# Agent variables
+agent_systemd_unit: "{{ agent_service_name }}.service"
