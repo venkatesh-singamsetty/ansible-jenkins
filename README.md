@@ -32,7 +32,7 @@ This repository is an opinionated Ansible scaffold to manage a Jenkins controlle
 
 - Option A — Static inventory (existing hosts):
   1. Edit `ansible/inventories/dev/hosts.ini` or `ansible/inventories/prod/hosts.ini` and `ansible/inventories/group_vars/*`.
-  2. (Optional) Create vaulted secrets: `./scripts/ansible/create_vault.sh` or `ansible-vault create inventories/group_vars/vault.yml`.
+  2. (Optional) Create vaulted secrets: `./ansible/scripts/create_vault.sh` or `ansible-vault create inventories/group_vars/vault.yml`.
   3. Run controller: `ansible-playbook -i ansible/inventories/dev ansible/playbooks/controller.yml`.
   4. Run agents: `ansible-playbook -i ansible/inventories/dev ansible/playbooks/agents.yml`.
 
@@ -43,9 +43,9 @@ This repository is an opinionated Ansible scaffold to manage a Jenkins controlle
 
 ```bash
 cd terraform/aws
-./generate_inventory.sh ssm      # preferred: uses SSM Session Manager
+../../ansible/scripts/generate_inventory.sh ssm      # preferred: uses SSM Session Manager
 # or
-./generate_inventory.sh ssh      # uses bastion + ProxyJump
+../../ansible/scripts/generate_inventory.sh ssh      # uses bastion + ProxyJump
 ```
 
   4. Run playbooks using the generated inventory, e.g.:
@@ -56,7 +56,7 @@ ansible-playbook -i terraform/aws/inventory ansible/playbooks/agents.yml --ask-v
 ```
 
 **Recommended connection method**
-- Use SSM (`./generate_inventory.sh ssm`) when possible — simpler and more secure for private instances. SSH via a bastion is available as a fallback.
+- Use SSM (`../../ansible/scripts/generate_inventory.sh ssm`) when possible — simpler and more secure for private instances. SSH via a bastion is available as a fallback.
 
 **Prerequisites**
 - `ansible` (latest stable). Install via `pip install ansible` or your package manager.
@@ -73,7 +73,7 @@ ansible-playbook -i terraform/aws/inventory ansible/playbooks/agents.yml --ask-v
 
 **Where to find details**
 -- Follow the step-by-step guide in `ansible/ANSIBLE_INFRA_SETUP.md` for a copyable provision → configure sequence, checks, and troubleshooting.
-- Inventory generator: `terraform/aws/generate_inventory.sh` (supports `ssm` and `ssh` modes).
+- Inventory generator: `ansible/scripts/generate_inventory.sh` (supports `ssm` and `ssh` modes).
 
 **Security notes (must read before applying infra)**
 - Set `admin_cidr` in Terraform variables before `terraform apply` to restrict management access.
@@ -88,20 +88,20 @@ If you'd like further automation (Makefile CI integration, hardened image builds
 
 **Demo Script**
 
-- **Path:** `scripts/ops/demo_provision_and_configure.sh`
+- **Path:** `scripts/demo_provision_and_configure.sh`
 - **Purpose:** Runs an end-to-end demo: Terraform apply → wait for cloud-init/SSM → generate inventory → run Ansible (controller by default).
 - **Prereqs:** `terraform`, `ansible-playbook`, (optional) `aws` CLI, AWS credentials configured.
 - **Quick run (make executable first):**
 
 ```bash
-chmod +x scripts/ops/demo_provision_and_configure.sh
-./scripts/ops/demo_provision_and_configure.sh --tfvars terraform/aws/terraform.tfvars --auto-approve --mode ssm --playbook controller
+chmod +x scripts/demo_provision_and_configure.sh
+./scripts/demo_provision_and_configure.sh --tfvars terraform/aws/terraform.tfvars --auto-approve --mode ssm --playbook controller
 ```
 
 - **Non-interactive with vault file:**
 
 ```bash
-./scripts/ops/demo_provision_and_configure.sh --tfvars terraform/aws/terraform.tfvars --auto-approve --mode ssm --playbook controller --vault-pass-file ~/.vault_pass.txt
+./scripts/demo_provision_and_configure.sh --tfvars terraform/aws/terraform.tfvars --auto-approve --mode ssm --playbook controller --vault-pass-file ~/.vault_pass.txt
 ```
 
 - **Notes:** Defaults to `ssm` mode and the `controller` playbook. Use `--mode ssh` to generate an SSH/bastion-style inventory.

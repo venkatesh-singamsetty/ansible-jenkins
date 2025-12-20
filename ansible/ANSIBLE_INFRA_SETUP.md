@@ -118,7 +118,7 @@ Step 4A — Configure SSM mode (recommended)
 
 ```bash
 cd gitRepos/ansible-jenkins/terraform/aws
-./generate_inventory.sh ssm
+../../ansible/script../../ansible/scripts/generate_inventory.sh ssm
 ```
 
 3. Activate SSM group_vars (this tells Ansible to use the `aws_ssm` connection plugin):
@@ -147,7 +147,7 @@ Step 4B — Configure SSH via Bastion (fallback)
 
 ```bash
 cd gitRepos/ansible-jenkins/terraform/aws
-./generate_inventory.sh ssh
+../../ansible/script../../ansible/scripts/generate_inventory.sh ssh
 ```
 
 2. Ensure the private key path printed by Terraform is present and readable, and that your `admin_cidr` allowed your client IP during provisioning.
@@ -159,7 +159,7 @@ Step 5 — Create Vault file for secrets (required)
 
 ```bash
 cd gitRepos/ansible-jenkins
-./scripts/ansible/create_vault.sh inventories/group_vars/vault.yml
+./ansible/scripts/create_vault.sh inventories/group_vars/vault.yml
 ansible-vault edit inventories/group_vars/vault.yml
 # set jenkins_admin_password and agent_secret
 ```
@@ -271,7 +271,7 @@ cd gitRepos/ansible-jenkins/terraform/aws
 terraform init && terraform apply -auto-approve
 
 # Generate inventory (ssm recommended)
-./generate_inventory.sh ssm
+../../ansible/script../../ansible/scripts/generate_inventory.sh ssm
 
 # Copy ssm group_vars into the dev inventory group_vars (one-time)
 mkdir -p ../../inventories/dev/group_vars
@@ -280,7 +280,7 @@ cp ../../inventories/group_vars/ssm-jenkins_controller.yml ../../inventories/dev
 cp ../../inventories/group_vars/ssm-jenkins_agent.yml ../../inventories/dev/group_vars/jenkins_agent.yml
 
 # Create vault and edit secrets
-../scripts/ansible/create_vault.sh ../../inventories/group_vars/vault.yml
+../ansible/scripts/create_vault.sh ../../inventories/group_vars/vault.yml
 ansible-vault edit ../../inventories/group_vars/vault.yml
 
 # Run Ansible to configure controller and agents
@@ -297,19 +297,19 @@ Keep this file as the single, up-to-date reference for provisioning and configur
 
 A convenience script is provided to run a typical end-to-end demo: provision infra with Terraform, wait for instances/SSM, generate the inventory, and run the Ansible playbook.
 
-Path: `scripts/ops/demo_provision_and_configure.sh`
+Path: `scripts/demo_provision_and_configure.sh`
 
 Quick usage:
 
 ```bash
 # make executable once
-chmod +x scripts/ops/demo_provision_and_configure.sh
+chmod +x scripts/demo_provision_and_configure.sh
 
 # Run interactive terraform apply, then configure controller via SSM
-./scripts/ops/demo_provision_and_configure.sh --tfvars terraform/aws/terraform.tfvars --mode ssm --playbook controller
+./scripts/demo_provision_and_configure.sh --tfvars terraform/aws/terraform.tfvars --mode ssm --playbook controller
 
 # Non-interactive terraform + vault password file
-./scripts/ops/demo_provision_and_configure.sh --tfvars terraform/aws/terraform.tfvars --auto-approve --mode ssm --playbook controller --vault-pass-file ~/.vault_pass.txt
+./scripts/demo_provision_and_configure.sh --tfvars terraform/aws/terraform.tfvars --auto-approve --mode ssm --playbook controller --vault-pass-file ~/.vault_pass.txt
 ```
 
 Notes:
