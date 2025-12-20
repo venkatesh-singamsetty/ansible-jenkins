@@ -52,3 +52,9 @@ variable "enable_nat_gateway" {
   default     = true
 }
 
+variable "controller_public" {
+  description = "If true, assign a public IP to the Jenkins controller instance (useful for demos)."
+  type        = bool
+  default     = false
+}
+

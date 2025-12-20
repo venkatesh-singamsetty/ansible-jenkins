@@ -2,9 +2,16 @@
 # Copy to terraform.tfvars and edit values before running `terraform apply`
 
 aws_region = "us-east-1"
+# Free-tier friendly defaults
 instance_type = "t2.micro"
-agent_count = 2
-enable_nat_gateway = true
+# Keep agent_count small to stay within free-tier / low-cost testing
+agent_count = 1
+# Disable NAT gateway by default to avoid additional AWS charges.
+# Set to true only if instances in private subnet require internet egress.
+enable_nat_gateway = false
+# For quick demos you can give the controller a public IP so it can reach the internet
+# without a NAT Gateway. Set to true to assign a public IP to the controller.
+controller_public = true
 vpc_cidr = "10.0.0.0/16"
 public_subnet_cidr = "10.0.1.0/24"
 private_subnet_cidr = "10.0.2.0/24"

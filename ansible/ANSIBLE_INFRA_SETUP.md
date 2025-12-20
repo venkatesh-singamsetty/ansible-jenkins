@@ -28,6 +28,24 @@ pip install ansible ansible-lint yamllint
 ./ansible/scripts/create_vault.sh inventories/group_vars/vault.yml
 ansible-vault edit inventories/group_vars/vault.yml
 # set jenkins_admin_password and any agent secrets
+
+Important security note:
+- Do NOT use the AWS root account credentials for Terraform/Ansible automation. Create an IAM user (for example `devops-user`) with Programmatic access and configure your local `aws` credentials with `aws configure`.
+- For quick demos you may attach `AdministratorAccess` to that user, but rotate/delete keys when finished and prefer least-privilege policies for production.
+
+Repo-local Python environment
+- To avoid installing tools globally, create a repo-local Python virtual environment and install Ansible and linters there:
+```bash
+cd /path/to/ansible-jenkins
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+pip install ansible ansible-lint yamllint boto3 awscli
+```
+
+Controller public IP (demo mode)
+- For fast demos you can give the Jenkins controller a public IP so it can reach external package repositories without a NAT Gateway. Set `controller_public = true` in `terraform/aws/terraform.tfvars` (the repo includes `controller_public` and a free-tier-friendly example in `terraform/aws/terraform.tfvars.example`).
+- If you prefer private subnets, set `enable_nat_gateway = true` while provisioning so private instances can access the internet; destroy the NAT Gateway afterward to avoid charges.
 ```
 
 3) Provision infra (quick demo)

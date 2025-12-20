@@ -233,7 +233,8 @@ resource "aws_instance" "controller" {
   subnet_id                   = aws_subnet.private.id
   vpc_security_group_ids      = [aws_security_group.controller_sg.id]
   iam_instance_profile        = aws_iam_instance_profile.ec2_profile.name
-  associate_public_ip_address = false
+  # Allow optionally assigning a public IP for the controller (useful for demos)
+  associate_public_ip_address = var.controller_public
   tags                        = { Name = "jenkins-controller-${terraform.workspace}" }
   user_data                   = <<-EOF
               #!/bin/bash

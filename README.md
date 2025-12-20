@@ -8,7 +8,29 @@ This repository contains:
 - `demo_provision_and_configure.sh` — convenience script to run a typical end-to-end demo (terraform → inventory → ansible).
 
 Which doc to read:
-- For the full, canonical provision → configure walkthrough, troubleshooting, and examples, read: `ansible/ANSIBLE_INFRA_SETUP.md` (includes a quick checklist).
+- For the full, canonical provision → configure, troubleshooting, and examples, read: `ansible/ANSIBLE_INFRA_SETUP.md` (includes a quick checklist).
+
+Quick notes for a fresh, free-tier-friendly demo
+- Create an IAM user named `devops-user` with Programmatic access and configure it locally with `aws configure`. Do NOT use root account credentials for automation.
+- `terraform/aws/terraform.tfvars.example` contains conservative, free-tier-friendly defaults (e.g. `t2.micro`, single agent, NAT gateway disabled). Copy it to `terraform.tfvars` and edit `admin_cidr` before applying.
+
+Repo-local setup (recommended)
+- Create a Python venv inside the repo so tools don't install globally:
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+pip install ansible ansible-lint yamllint boto3 awscli markdownlint-cli
+```
+- This keeps `ansible`, `ansible-lint` and other tools isolated to this repo.
+
+Demo networking note
+- For a quick free-tier demo the Terraform variable `controller_public` can be set to `true` in `terraform/aws/terraform.tfvars` so the Jenkins controller receives a public IP and can download packages without a NAT Gateway. The repository includes the variable and a free-tier-friendly example in `terraform/aws/terraform.tfvars.example`.
+
+Recommended workflow (quick)
+1. Configure `aws` credentials for `devops-user` (do not use root credentials): `aws configure`
+2. Copy `terraform/aws/terraform.tfvars.example` → `terraform/aws/terraform.tfvars` and set `admin_cidr` and `controller_public = true` for the demo.
+3. Run Terraform (see `ansible/ANSIBLE_INFRA_SETUP.md` for full commands) or use the convenience script `./demo_provision_and_configure.sh`.
 
 Quick start (summary)
 
