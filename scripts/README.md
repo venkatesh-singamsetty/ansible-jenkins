@@ -3,20 +3,19 @@
 This folder documents the canonical operational scripts provided by this repository and the small backward-compatible wrappers that remain for legacy invocations.
 
 Structure
-- `scripts/ansible/` — canonical Ansible helpers
+- `ansible/scripts/` — canonical Ansible helpers
   - `generate_inventory.sh` — Generate an inventory from Terraform outputs (SSM or SSH modes).
   - `create_vault.sh` — Helper to create an ansible-vault file with placeholder secrets.
 
-- `scripts/ops/` — canonical operation helpers
+- `scripts/` — shared operation helpers (kept at repo root because they orchestrate both Terraform and Ansible)
   - `demo_provision_and_configure.sh` — End-to-end demo orchestration (terraform apply -> wait -> generate inventory -> run ansible).
 
 Backward-compatible wrappers
-- `scripts/create_vault.sh` — Thin wrapper that execs `scripts/ansible/create_vault.sh`.
-- `scripts/demo_provision_and_configure.sh` — Thin wrapper that execs `scripts/ops/demo_provision_and_configure.sh`.
-- `terraform/aws/generate_inventory.sh` — Thin wrapper that execs `scripts/ansible/generate_inventory.sh` (kept inside `terraform/aws` for convenience when running from that directory).
+- `scripts/create_vault.sh` — Thin wrapper that execs `ansible/scripts/create_vault.sh`.
+- `terraform/aws/generate_inventory.sh` — Thin wrapper that execs `ansible/scripts/generate_inventory.sh` (kept inside `terraform/aws` for convenience when running from that directory).
 
 Recommended usage
-- Prefer calling the canonical scripts under `scripts/ansible/` and `scripts/ops/`.
+- Prefer calling the canonical scripts under `ansible/scripts/` and the shared demo at `scripts/`.
 - Wrappers are kept for backward compatibility and CI pipelines that may reference older locations.
 
 Examples
@@ -24,19 +23,19 @@ Examples
 Run demo (recommended canonical path):
 
 ```bash
-./scripts/ops/demo_provision_and_configure.sh --tfvars terraform/aws/terraform.tfvars --auto-approve --mode ssm --playbook controller
+./scripts/demo_provision_and_configure.sh --tfvars terraform/aws/terraform.tfvars --auto-approve --mode ssm --playbook controller
 ```
 
 Generate inventory (canonical):
 
 ```bash
-./scripts/ansible/generate_inventory.sh ssm
+./ansible/scripts/generate_inventory.sh ssm
 ```
 
 Create vault (canonical):
 
 ```bash
-./scripts/ansible/create_vault.sh inventories/group_vars/vault.yml
+./ansible/scripts/create_vault.sh inventories/group_vars/vault.yml
 ```
 
 Maintenance notes
