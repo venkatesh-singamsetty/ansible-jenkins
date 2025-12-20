@@ -7,6 +7,59 @@ This document consolidates the repository layout, infrastructure steps (Terrafor
 
 This document provides a single ordered workflow you can follow to provision AWS infrastructure (enterprise mode) with Terraform and configure Jenkins (controller + agents) using Ansible. It includes all manual steps you must run and where to supply secrets.
 
+## Quick Checklist (short, copy-paste steps)
+
+Follow these quick steps to run the end-to-end demo. For details and troubleshooting see the rest of this document.
+
+1) Prepare local environment
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install --upgrade pip
+pip install ansible ansible-lint yamllint
+# Optional: shellcheck (macOS: brew install shellcheck)
+# Optional: terraform (install via package manager)
+```
+
+2) Vault and variables
+
+```bash
+./ansible/scripts/create_vault.sh inventories/group_vars/vault.yml
+ansible-vault edit inventories/group_vars/vault.yml
+# set jenkins_admin_password and any agent secrets
+```
+
+3) Provision infra (quick demo)
+
+```bash
+chmod +x ./demo_provision_and_configure.sh
+./demo_provision_and_configure.sh --tfvars terraform/aws/terraform.tfvars --auto-approve --mode ssm --playbook controller
+```
+
+4) (If Terraform applied manually) Generate inventory
+
+```bash
+./terraform/aws/generate_inventory.sh ssm > inventories/generated.ini
+```
+
+5) Configure controller and agents
+
+```bash
+ansible-playbook -i inventories/generated.ini ansible/playbooks/controller.yml --vault-password-file ~/.vault_pass.txt
+ansible-playbook -i inventories/generated.ini ansible/playbooks/agents.yml --vault-password-file ~/.vault_pass.txt
+```
+
+6) Verify and cleanup
+
+```bash
+terraform output -raw bastion_public_ip || true
+terraform destroy -var-file=terraform.tfvars -auto-approve
+```
+
+See the full document below for explanations and troubleshooting.
+
+
 Target architecture (what this repo creates)
 - VPC with a public subnet (bastion) and private subnet (controller + agents)
 - Bastion host in public subnet (SSH access) — optional when using SSM
@@ -297,19 +350,19 @@ Keep this file as the single, up-to-date reference for provisioning and configur
 
 A convenience script is provided to run a typical end-to-end demo: provision infra with Terraform, wait for instances/SSM, generate the inventory, and run the Ansible playbook.
 
-Path: `scripts/demo_provision_and_configure.sh`
+Path: `./demo_provision_and_configure.sh`
 
 Quick usage:
 
 ```bash
 # make executable once
-chmod +x scripts/demo_provision_and_configure.sh
+chmod +x ./demo_provision_and_configure.sh
 
 # Run interactive terraform apply, then configure controller via SSM
-./scripts/demo_provision_and_configure.sh --tfvars terraform/aws/terraform.tfvars --mode ssm --playbook controller
+./demo_provision_and_configure.sh --tfvars terraform/aws/terraform.tfvars --mode ssm --playbook controller
 
 # Non-interactive terraform + vault password file
-./scripts/demo_provision_and_configure.sh --tfvars terraform/aws/terraform.tfvars --auto-approve --mode ssm --playbook controller --vault-pass-file ~/.vault_pass.txt
+./demo_provision_and_configure.sh --tfvars terraform/aws/terraform.tfvars --auto-approve --mode ssm --playbook controller --vault-pass-file ~/.vault_pass.txt
 ```
 
 Notes:

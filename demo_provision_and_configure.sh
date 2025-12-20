@@ -2,7 +2,7 @@
 set -euo pipefail
 IFS=$'\n\t'
 
-# demo_provision_and_configure.sh (canonical at scripts/)
+# demo_provision_and_configure.sh (canonical at repo root)
 # Typical end-to-end demo script for this repo:
 # 1) terraform apply (terraform/aws)
 # 2) wait for instances and SSM
@@ -53,7 +53,7 @@ while [[ $# -gt 0 ]]; do
 		--wait-seconds) WAIT_SECONDS="$2"; shift 2;;
 		-h|--help) usage; exit 0;;
 		*) echo "Unknown option: $1"; usage; exit 1;;
-	esac
+		esac
 done
 
 # Validate choices
@@ -128,4 +128,5 @@ Next recommended steps:
 EOF
 
 exit 0
+
 
