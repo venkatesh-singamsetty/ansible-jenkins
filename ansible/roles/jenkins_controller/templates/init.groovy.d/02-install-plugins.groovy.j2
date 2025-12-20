@@ -1,3 +1,59 @@
+import jenkins.model.*
+import jenkins.install.*
+import java.util.logging.Logger
+
+// Minimal, quiet plugin installer template.
+def logger = Logger.getLogger("")
+def instance = Jenkins.get()
+
+// `jenkins_plugins` is rendered by Ansible as a JSON array via `to_json`.
+def plugins = {{ jenkins_plugins | default(['git','workflow-aggregator','credentials']) | to_json }}
+
+def pm = instance.getPluginManager()
+def uc = instance.getUpdateCenter()
+uc.updateAllSites()
+
+def installed = []
+def already = []
+def missing = []
+
+plugins.each { pluginId ->
+  def existing = pm.getPlugin(pluginId)
+  if (existing) {
+    already << "${pluginId}:${existing.getVersion()}"
+    return
+  }
+
+  def candidate = uc.getPlugin(pluginId)
+  if (candidate == null) {
+    missing << pluginId
+    return
+  }
+
+  try {
+    def future = candidate.deploy()
+    def maxWaitMs = 5 * 60 * 1000 // 5 minutes per plugin
+    def start = System.currentTimeMillis()
+    while (!future.isDone() && (System.currentTimeMillis() - start) < maxWaitMs) {
+      sleep(1000)
+    }
+    if (future.isDone()) {
+      installed << pluginId
+    } else {
+      missing << pluginId
+    }
+  } catch (Throwable e) {
+    missing << pluginId
+  }
+}
+
+// Concise summary output
+logger.info("Jenkins plugin install summary: Installed=${installed.size()} Already=${already.size()} Missing=${missing.size()}")
+if (installed) { logger.info("  Installed: ${installed.join(', ')}") }
+if (already) { logger.info("  Already: ${already.join(', ')}") }
+if (missing) { logger.warning("  Missing/failed: ${missing.join(', ')}") }
+
+instance.save()
 #!groovy
 // 02-install-plugins.groovy
 // Minimal plugin installer. Set `jenkins_plugins` list in group_vars or defaults.

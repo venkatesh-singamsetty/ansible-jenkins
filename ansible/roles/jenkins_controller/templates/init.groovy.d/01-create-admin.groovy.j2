@@ -1,3 +1,37 @@
+import jenkins.model.*
+import hudson.security.*
+
+def instance = Jenkins.getInstance()
+
+def adminUser = {{ jenkins_admin_user | default('admin') | to_json }}
+def adminPassword = {{ jenkins_admin_password | default('change-me') | to_json }}
+def adminFullName = {{ jenkins_admin_fullname | default('Administrator') | to_json }}
+def adminEmail = {{ jenkins_admin_email | default('admin@example.com') | to_json }}
+
+println("Creating initial admin user: ${adminUser}")
+
+def hudsonRealm = new HudsonPrivateSecurityRealm(false)
+hudsonRealm.createAccount(adminUser, adminPassword)
+instance.setSecurityRealm(hudsonRealm)
+
+def strategy = new FullControlOnceLoggedInAuthorizationStrategy()
+instance.setAuthorizationStrategy(strategy)
+
+def user = hudsonRealm.getUser(adminUser)
+if (user != null) {
+  user.setFullName(adminFullName)
+  def e = user.getProperty(hudson.tasks.Mailer.UserProperty.class)
+  if (e == null) {
+    user.addProperty(new hudson.tasks.Mailer.UserProperty(adminEmail))
+  } else {
+    user.addProperty(new hudson.tasks.Mailer.UserProperty(adminEmail))
+  }
+  user.save()
+}
+
+instance.save()
+
+println("Initial admin setup complete")
 #!groovy
 // 01-create-admin.groovy
 // Creates an initial admin user if not present. Values are provided by Ansible variables

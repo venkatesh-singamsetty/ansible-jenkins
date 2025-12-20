@@ -27,9 +27,10 @@
 
 - name: Install Jenkins package
   ansible.builtin.package:
-    name: "{{ jenkins_controller_package_name | default(jenkins_package_name | default('jenkins')) }}"
-    state: "{{ jenkins_controller_package_state | default(jenkins_package_state) }}"
-  notify: Restart Jenkins
+    name: "{{ jenkins_controller_package_name | default('jenkins') }}"
+    state: "{{ jenkins_controller_package_state | default('present') }}"
+  notify:
+    - Restart Jenkins
 
 - name: Ensure Jenkins home directory permissions
   ansible.builtin.file:
@@ -43,11 +44,13 @@
 - name: Deploy Jenkins config.xml
   ansible.builtin.template:
     src: jenkins_config.xml.j2
-    dest: "{{ jenkins_controller_home | default(jenkins_home) }}/config.xml"
+    dest: >-
+      {{ jenkins_controller_home | default(jenkins_home) }}/config.xml
     owner: jenkins
     group: jenkins
     mode: '0644'
-  notify: Restart Jenkins
+  notify:
+    - Restart Jenkins
 
 # Deploy Groovy init scripts to bootstrap admin user and plugins (if provided)
 - name: Ensure Jenkins init.groovy.d directory
@@ -59,22 +62,26 @@
     mode: '0755'
   when: jenkins_controller_home is defined or jenkins_home is defined
 
-- name: Deploy groovy script: create admin
+- name: "Deploy groovy script: create admin"
   ansible.builtin.template:
     src: init.groovy.d/01-create-admin.groovy.j2
-    dest: "{{ jenkins_controller_home | default(jenkins_home) }}/init.groovy.d/01-create-admin.groovy"
+    dest: >-
+      {{ jenkins_controller_home | default(jenkins_home) }}/init.groovy.d/01-create-admin.groovy
     owner: jenkins
     group: jenkins
     mode: '0644'
-  notify: Restart Jenkins
+  notify:
+    - Restart Jenkins
   when: jenkins_controller_home is defined or jenkins_home is defined
 
-- name: Deploy groovy script: install plugins
+- name: "Deploy groovy script: install plugins"
   ansible.builtin.template:
     src: init.groovy.d/02-install-plugins.groovy.j2
-    dest: "{{ jenkins_controller_home | default(jenkins_home) }}/init.groovy.d/02-install-plugins.groovy"
+    dest: >-
+      {{ jenkins_controller_home | default(jenkins_home) }}/init.groovy.d/02-install-plugins.groovy
     owner: jenkins
     group: jenkins
     mode: '0644'
-  notify: Restart Jenkins
+  notify:
+    - Restart Jenkins
   when: jenkins_controller_home is defined or jenkins_home is defined

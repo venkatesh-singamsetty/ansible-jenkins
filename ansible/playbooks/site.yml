@@ -1,13 +1,12 @@
 ---
----
 # Playbook: site.yml
 # Purpose: Top-level orchestration to apply controller and agent roles
 # Usage: ansible-playbook -i inventories/<env> playbooks/site.yml
-name: Apply Jenkins configuration to all environments
-hosts: all
-serial: 1
-roles:
-  - role: jenkins_controller
-    when: "'jenkins_controller' in group_names"
-  - role: jenkins_agent
-    when: "'jenkins_agent' in group_names"
+- name: Apply Jenkins configuration to all environments
+  hosts: all
+  serial: 1
+  roles:
+    - role: jenkins_controller
+      when: "'jenkins_controller' in group_names"
+    - role: jenkins_agent
+      when: "'jenkins_agent' in group_names"
