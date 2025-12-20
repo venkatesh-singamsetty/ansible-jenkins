@@ -7,6 +7,8 @@
 *.tfstate.backup
 crash.log
 .terraform/
+terraform/aws/tfplan
+terraform/aws/tfplan.destroy
 # keep .terraform.lock.hcl committed for provider pinning
 
 ## Terraform variable files (often contain secrets)

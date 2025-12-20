@@ -16,6 +16,7 @@ Quick notes for a fresh, free-tier-friendly demo
 
 Repo-local setup (recommended)
 - Create a Python venv inside the repo so tools don't install globally:
+
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
@@ -48,6 +49,32 @@ chmod +x ./demo_provision_and_configure.sh
 Notes & links
 - Use SSM mode whenever possible (no inbound SSH required).
 - Do not commit plaintext secrets; use Ansible Vault.
--- See `ansible/ANSIBLE_INFRA_SETUP.md` for full procedure and the Quick Checklist section for a concise checklist.
+- See `ansible/ANSIBLE_INFRA_SETUP.md` for full procedure and the Quick Checklist section for a concise checklist.
 
 If you'd like, I can also consolidate docs further (merge checklist into the main doc) or add a GitHub Actions workflow to run `ansible-lint` and `terraform fmt/validate` on PRs. Tell me which you'd prefer.
+
+---
+
+## Destroying the infrastructure
+
+When you need to tear down the demo infrastructure (safe, planned destroy), the following sequence was used in this repository. Run these from `terraform/aws`:
+
+```bash
+cd terraform/aws
+terraform init -input=false
+if [ -f terraform.tfvars ]; then \
+  terraform plan -destroy -var-file=terraform.tfvars -out=tfplan.destroy; \
+else \
+  terraform plan -destroy -out=tfplan.destroy; \
+fi
+# (optional) inspect the saved plan (first 300 lines):
+terraform show -no-color tfplan.destroy | sed -n '1,300p'
+# apply the saved destroy plan (auto-approve):
+terraform apply -auto-approve tfplan.destroy
+```
+
+Notes:
+- Terraform will save the plan as `tfplan.destroy` in `terraform/aws` for auditing before apply.
+- The apply step in this repo removed all demo resources (VPC, subnets, EC2 instances, SGs, IAM roles, key pair, and the local PEM written by Terraform).
+- The local PEM generated earlier (example path: `terraform/aws/ssh/jenkins-ansible-key-default.pem`) was removed by the destroy; if you need to keep private keys, export/store them securely before destroying (vault, encrypted S3, or local secure storage).
+- Always verify in the AWS Console that resources are deleted and rotate any secrets if necessary.
