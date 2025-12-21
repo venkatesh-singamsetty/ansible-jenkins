@@ -23,17 +23,19 @@ data "aws_ami" "ubuntu" {
   }
 }
 
-# Generate an SSH keypair locally and create AWS key pair
+# Generate SSH private & public key locally
 resource "tls_private_key" "ansible_key" {
   algorithm = "RSA"
   rsa_bits  = 4096
 }
 
+# Upload Public key to AWS
 resource "aws_key_pair" "ansible" {
   key_name   = "${var.ssh_key_name_prefix}-${terraform.workspace}"
   public_key = tls_private_key.ansible_key.public_key_openssh
 }
 
+# Save the private key locally as a .pem file
 resource "local_file" "private_key_pem" {
   content         = tls_private_key.ansible_key.private_key_pem
   filename        = "${path.module}/ssh/${aws_key_pair.ansible.key_name}.pem"
